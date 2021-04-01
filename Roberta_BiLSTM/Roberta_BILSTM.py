@@ -25,25 +25,21 @@ Sort according to length
 """
 def sort_batch(data, label, length):
   batch_size = data.size(0)
-  # 先将数据转化为numpy()，再得到排序的index
+
   # first chaneg data intp numpy and sort to get index
   inx = torch.from_numpy(np.argsort(length.numpy())[::-1].copy())
   data = data[inx]
   label = label[inx]
   length = length[inx]
-  # length转化为了list格式，不再使用torch.Tensor格式
-  # length to transfer to list not using torch.Tesor
+
+  # length to transfer to list not using torch.Tensor
   length = list(length.numpy())
   return (data, label, length)
 
 
 class BiLSTM(nn.Module):
   def __init__(self, input_dim, hidden_dim, output_dim, num_layers, biFlag, dropout=0.5):
-    # input_dim 输入特征维度d_input
-    # hidden_dim 隐藏层的大小
-    # output_dim 输出层的大小（分类的类别数）
-    # num_layers LSTM隐藏层的层数
-    # biFlag 是否使用双向
+
     super(BiLSTM, self).__init__()
     self.input_dim = input_dim
     self.hidden_dim = hidden_dim
@@ -54,17 +50,14 @@ class BiLSTM(nn.Module):
     else:
       self.bi_num = 1
     self.biFlag = biFlag
-    # 根据需要修改device
     # change device
     self.device = torch.device("cuda")
 
     # define LSTM input output layer_number  batch_first and dropout portion
-    # 定义LSTM网络的输入，输出，层数，是否batch_first，dropout比例，是否双向
     self.layer1 = nn.LSTM(input_size=input_dim, hidden_size=hidden_dim, \
                           num_layers=num_layers, batch_first=True, \
                           dropout=dropout, bidirectional=biFlag)
     # define output layer and use log_softmax to output
-    # 定义线性分类层，使用logsoftmax输出
     self.layer2 = nn.Sequential(
       nn.Linear(hidden_dim * self.bi_num, output_dim),
       nn.LogSoftmax(dim=2)
@@ -98,7 +91,6 @@ class BiLSTM(nn.Module):
     out = self.layer2(out)
 
     # return the node and prediction output and length
-    # 返回正确的标签，预测标签，以及长度向量
     return y, out, length
 
 
