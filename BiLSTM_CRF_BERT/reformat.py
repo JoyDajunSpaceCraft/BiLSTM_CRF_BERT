@@ -74,9 +74,9 @@ def produce_source(filename, dev, test, train):
 
 
 if __name__ == "__main__":
-  filename = "/Users/apple/PycharmProjects/fairseq/Roberta_BiLSTM/data/MedMentions/corpus_pubtator.txt"
-  dev = "/Users/apple/PycharmProjects/fairseq/Roberta_BiLSTM/data/MedMentions/corpus_pubtator_pmids_dev.txt"
-  test = "/Users/apple/PycharmProjects/fairseq/Roberta_BiLSTM/data/MedMentions/corpus_pubtator_pmids_test.txt"
-  train = "/Users/apple/PycharmProjects/fairseq/Roberta_BiLSTM/data/MedMentions/corpus_pubtator_pmids_trng.txt"
+  filename = "/Users/apple/PycharmProjects/fairseq/BiLSTM_CRF_BERT/data/MedMentions/corpus_pubtator.txt"
+  dev = "/Users/apple/PycharmProjects/fairseq/BiLSTM_CRF_BERT/data/MedMentions/corpus_pubtator_pmids_dev.txt"
+  test = "/Users/apple/PycharmProjects/fairseq/BiLSTM_CRF_BERT/data/MedMentions/corpus_pubtator_pmids_test.txt"
+  train = "/Users/apple/PycharmProjects/fairseq/BiLSTM_CRF_BERT/data/MedMentions/corpus_pubtator_pmids_trng.txt"
 
   produce_source(filename, dev, test, train)
