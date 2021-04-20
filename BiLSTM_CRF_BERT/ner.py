@@ -57,12 +57,13 @@ def evaluate(args, data, model, id2label, all_ori_tokens):
     ori_labels = []
 
     for b_i, (input_ids, input_mask, segment_ids, label_ids) in enumerate(tqdm(dataloader, desc="Evaluating")):
-        
+
         input_ids = input_ids.to(args.device)
         input_mask = input_mask.to(args.device)
         segment_ids = segment_ids.to(args.device)
         label_ids = label_ids.to(args.device)
 
+        # not add grad into eval
         with torch.no_grad():
             logits = model.predict(input_ids, segment_ids, input_mask)
         # logits = torch.argmax(F.log_softmax(logits, dim=2), dim=2)
@@ -70,10 +71,10 @@ def evaluate(args, data, model, id2label, all_ori_tokens):
 
         for l in logits:
             pred_labels.append([id2label[idx] for idx in l])
-        
+
         for l in label_ids:
             ori_labels.append([id2label[idx.item()] for idx in l])
-    
+
     eval_list = []
     for ori_tokens, oril, prel in zip(all_ori_tokens, ori_labels, pred_labels):
         for ot, ol, pl in zip(ori_tokens, oril, prel):
@@ -81,14 +82,14 @@ def evaluate(args, data, model, id2label, all_ori_tokens):
                 continue
             eval_list.append(f"{ot} {ol} {pl}\n")
         eval_list.append("\n")
-    
-    # eval the model 
+
+    # eval the model
     counts = conlleval.evaluate(eval_list)
     conlleval.report(counts)
 
     # namedtuple('Metrics', 'tp fp fn prec rec fscore')
     overall, by_type = conlleval.metrics(counts)
-    
+
     return overall, by_type
 
 
@@ -109,7 +110,7 @@ def main():
                         help="Pretrained tokenizer name or path if not the same as model_name")
     parser.add_argument("--cache_dir", default="", type=str,
                         help="Where do you want to store the pre-trained models downloaded from s3")
-    
+
     parser.add_argument("--max_seq_length", default=256, type=int)
     parser.add_argument("--do_train", default=False, type=boolean_string)
     parser.add_argument("--do_eval", default=False, type=boolean_string)
@@ -176,7 +177,7 @@ def main():
                 print(e)
                 print('pleace remove the files of output dir and data.conf')
                 exit(-1)
-    
+
     if os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train:
         raise ValueError("Output directory ({}) already exists and is not empty.".format(args.output_dir))
     if not os.path.exists(args.output_dir):
@@ -184,7 +185,7 @@ def main():
 
     if not os.path.exists(os.path.join(args.output_dir, "eval")):
         os.makedirs(os.path.join(args.output_dir, "eval"))
-    
+
     writer = SummaryWriter(logdir=os.path.join(args.output_dir, "eval"), comment="Linear")
 
     processor = NerProcessor()
@@ -198,23 +199,23 @@ def main():
     else:
         label2id = {l:i for i,l in enumerate(label_list)}
         with open(os.path.join(args.output_dir, "label2id.pkl"), "wb") as f:
-            pickle.dump(label2id, f)      
-    
-    id2label = {value:key for key,value in label2id.items()} 
+            pickle.dump(label2id, f)
+
+    id2label = {value:key for key,value in label2id.items()}
 
     # Prepare optimizer and schedule (linear warmup and decay)
 
     if args.do_train:
 
-        tokenizer = BertTokenizer.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path, 
+        tokenizer = BertTokenizer.from_pretrained(args.tokenizer_name if args.tokenizer_name else args.model_name_or_path,
                     do_lower_case=args.do_lower_case)
-        config = BertConfig.from_pretrained(args.config_name if args.config_name else args.model_name_or_path, 
+        config = BertConfig.from_pretrained(args.config_name if args.config_name else args.model_name_or_path,
                 num_labels=num_labels)
-        model = BERT_BiLSTM_CRF.from_pretrained(args.model_name_or_path, config=config, 
+        model = BERT_BiLSTM_CRF.from_pretrained(args.model_name_or_path, config=config,
                 need_birnn=args.need_birnn, rnn_dim=args.rnn_dim)
 
         model.to(device)
-        
+
         if n_gpu > 1:
             model = torch.nn.DataParallel(model)
 
@@ -224,7 +225,7 @@ def main():
 
         if args.do_eval:
             eval_examples, eval_features, eval_data = get_Dataset(args, processor, tokenizer, mode="eval")
-      
+
         if args.max_steps > 0:
             t_total = args.max_steps
             args.num_train_epochs = args.max_steps // (len(train_dataloader) // args.gradient_accumulation_steps) + 1
@@ -269,16 +270,16 @@ def main():
                     scheduler.step()  # Update learning rate schedule
                     model.zero_grad()
                     global_step += 1
-                    
+
                     if args.logging_steps > 0 and global_step % args.logging_steps == 0:
                         tr_loss_avg = (tr_loss-logging_loss)/args.logging_steps
                         writer.add_scalar("Train/loss", tr_loss_avg, global_step)
                         logging_loss = tr_loss
-            
+
             if args.do_eval:
                 all_ori_tokens_eval = [f.ori_tokens for f in eval_features]
                 overall, by_type = evaluate(args, eval_data, model, id2label, all_ori_tokens_eval)
-                
+
                 # add eval result to tensorboard
                 f1_score = overall.fscore
                 writer.add_scalar("Eval/precision", overall.prec, ep)
@@ -331,9 +332,9 @@ def main():
         model.eval()
 
         pred_labels = []
-        
+
         for b_i, (input_ids, input_mask, segment_ids, label_ids) in enumerate(tqdm(test_dataloader, desc="Predicting")):
-            
+
             input_ids = input_ids.to(device)
             input_mask = input_mask.to(device)
             segment_ids = segment_ids.to(device)
