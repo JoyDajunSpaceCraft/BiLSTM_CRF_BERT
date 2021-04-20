@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#SBATCH --cluster=gpu
+#SBATCH --partition=gtx1080*
+#SBATCH --job-name=BiLSTM-CRF-BERT
+#SBATCH --output=/ihome/hdaqing/yuj49/BiLSTM_CRF_BERT/output
+#SBATCH --time=5:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+sh run.sh
