@@ -15,7 +15,7 @@ class InputExample(object):
 
     def __init__(self, guid, text, label=None):
         self.guid = guid
-        self.text = text 
+        self.text = text
         self.label = label
 
 class InputFeatures(object):
@@ -37,8 +37,8 @@ class NerProcessor(object):
             lines = []
             words = []
             labels = []
-            
-            for line in f.readlines():   
+
+            for line in f.readlines():
                 contends = line.strip()
                 tokens = line.strip().split("\t")
 
@@ -56,9 +56,9 @@ class NerProcessor(object):
                         lines.append([' '.join(label), ' '.join(word)])
                         words = []
                         labels = []
-            
+
             return lines
-    
+
     def get_labels(self, args):
         labels = set()
         if os.path.exists(os.path.join(args.output_dir, "label_list.pkl")):
@@ -81,12 +81,12 @@ class NerProcessor(object):
             else:
                 logger.info("loading error and return the default labels B,I,O")
                 labels = {"O", "B", "I"}
-        
-        return labels 
+
+        return labels
 
     def get_examples(self, input_file):
         examples = []
-        
+
         lines = self.read_data(input_file)
 
         for i, line in enumerate(lines):
@@ -95,7 +95,7 @@ class NerProcessor(object):
             label = line[0]
 
             examples.append(InputExample(guid=guid, text=text, label=label))
-        
+
         return examples
 
 
@@ -108,7 +108,7 @@ def convert_examples_to_features(args, examples, label_list, max_seq_length, tok
     for (ex_index, example) in tqdm(enumerate(examples), desc="convert examples"):
         # if ex_index % 10000 == 0:
         #     logger.info("Writing example %d of %d" % (ex_index, len(examples)))
-        
+
         textlist = example.text.split(" ")
         labellist = example.label.split(" ")
         assert len(textlist) == len(labellist)
@@ -118,7 +118,7 @@ def convert_examples_to_features(args, examples, label_list, max_seq_length, tok
 
         for i, word in enumerate(textlist):
             # 防止wordPiece情况出现，不过貌似不会
-            
+
             token = tokenizer.tokenize(word)
             tokens.extend(token)
             label_1 = labellist[i]
@@ -133,14 +133,14 @@ def convert_examples_to_features(args, examples, label_list, max_seq_length, tok
                         labels.append("O")
                     else:
                         labels.append("I")
-            
+
         if len(tokens) >= max_seq_length - 1:
             tokens = tokens[0:(max_seq_length - 2)]  # -2 的原因是因为序列需要加一个句首和句尾标志
             labels = labels[0:(max_seq_length - 2)]
             ori_tokens = ori_tokens[0:(max_seq_length - 2)]
 
         ori_tokens = ["[CLS]"] + ori_tokens + ["[SEP]"]
-        
+
         ntokens = []
         segment_ids = []
         label_ids = []
@@ -156,12 +156,13 @@ def convert_examples_to_features(args, examples, label_list, max_seq_length, tok
         ntokens.append("[SEP]")
         segment_ids.append(0)
         label_ids.append(label_map["O"])
-        input_ids = tokenizer.convert_tokens_to_ids(ntokens)   
-        
+        input_ids = tokenizer.convert_tokens_to_ids(ntokens)
+
         input_mask = [1] * len(input_ids)
 
         assert len(ori_tokens) == len(ntokens), f"{len(ori_tokens)}, {len(ntokens)}, {ori_tokens}"
-
+        if len(ori_tokens) <len(ntokens):
+          ntokens = ntokens[:len(ori_tokens)]
         while len(input_ids) < max_seq_length:
             input_ids.append(0)
             input_mask.append(0)
