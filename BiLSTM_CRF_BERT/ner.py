@@ -33,7 +33,10 @@ logger = logging.getLogger(__name__)
 valid_curve = []
 checkpoint_interval = 5
 filename = "store iteration"
-
+train_loss_data = []
+train_loss_step = []
+eval_loss_data = []
+eval_loss_step =[]
 
 # set the random seed for repeat
 def set_seed(args):
@@ -96,12 +99,14 @@ def evaluate(args, data, model, id2label, all_ori_tokens, writer):
 
     if (b_i + 1) % 1 == 0:
       steps += 1
-      if args.logging_steps > 0 and steps % 15 == 0:
+      if args.logging_steps > 0 and steps % 7 == 0:
         ev_loss_avg = (ev_loss - logging_ev_loss) / args.logging_steps
         eval_list.append(float(ev_loss_avg))
         steps_list.append(steps)
         print("write into eval")
-        writer.add_scalar("Eval/loss", ev_loss_avg, steps)
+        writer.add_scalar("Eval/loss", ev_loss_avg, global_step=steps)
+        eval_loss_data.append(ev_loss_avg)
+        eval_loss_step.append(steps)
         logging_ev_loss = ev_loss
     print("Eval done")
 
@@ -261,7 +266,7 @@ def main():
     train_sampler = RandomSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size)
 
-    eval_data =  None
+    eval_data = None
     if args.do_eval:
       eval_examples, eval_features, eval_data = get_Dataset(args, processor, tokenizer, mode="eval")
 
@@ -293,39 +298,41 @@ def main():
     # check dimetion
     print("logging_steps is", args.logging_steps)
     print("gradient_accumulation_steps", args.gradient_accumulation_steps)
-    eval_dataloader = DataLoader(eval_data, sampler=sampler, batch_size=args.train_batch_size)
-    # draw eval data
-    ev_loss = 0.0
-    eval_step = 0
-    logging_ev_loss = 0.0
-    eval_list = []
-    steps_list = []
-    for ep in trange(int(args.num_train_epochs), desc="Epoch"):
-      for eval_steps, (input_ids, input_mask, segment_ids, label_ids) in enumerate(
-        tqdm(eval_dataloader, desc="Evaluating")):
-        input_ids = input_ids.to(args.device)
-        input_mask = input_mask.to(args.device)
-        segment_ids = segment_ids.to(args.device)
-        label_ids = label_ids.to(args.device)
-        with torch.no_grad():
-          loss = model(input_ids, label_ids, segment_ids, input_mask)
-        ev_loss += loss
 
-        if (eval_steps + 1) % 1 == 0:
-          eval_step += 1
-          if args.logging_steps > 0 and eval_step % 15 == 0:
-            ev_loss_avg = (ev_loss - logging_ev_loss) / args.logging_steps
-            eval_list.append(float(ev_loss_avg))
-            steps_list.append(eval_step)
-            print("write into eval")
-            writer.add_scalar("Eval/loss", ev_loss_avg, eval_step)
-            logging_ev_loss = ev_loss
-    print("Eval done")
+    # eval_sampler = SequentialSampler(eval_data)
+    # eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.train_batch_size)
+    # # draw eval data
+    # ev_loss = 0.0
+    # eval_step = 0
+    # logging_ev_loss = 0.0
+    # eval_list = []
+    # steps_list = []
+    # for ep in trange(int(args.num_train_epochs), desc="Epoch"):
+    #   for eval_steps, (input_ids, input_mask, segment_ids, label_ids) in enumerate(
+    #     tqdm(eval_dataloader, desc="Evaluating")):
+    #     input_ids = input_ids.to(args.device)
+    #     input_mask = input_mask.to(args.device)
+    #     segment_ids = segment_ids.to(args.device)
+    #     label_ids = label_ids.to(args.device)
+    #     with torch.no_grad():
+    #       loss = model(input_ids, label_ids, segment_ids, input_mask)
+    #     ev_loss += loss
+    #
+    #     if (eval_steps + 1) % 1 == 0:
+    #       eval_step += 1
+    #       if args.logging_steps > 0 and eval_step % 15 == 0:
+    #         ev_loss_avg = (ev_loss - logging_ev_loss) / args.logging_steps
+    #         eval_list.append(float(ev_loss_avg))
+    #         steps_list.append(eval_step)
+    #         print("write into eval")
+    #         writer.add_scalar("Eval/loss", ev_loss_avg, eval_step)
+    #         logging_ev_loss = ev_loss
+    # print("Eval done")
 
     for ep in trange(int(args.num_train_epochs), desc="Epoch"):
       model.train()
       # make sure do_eval and do_train both open
-      sampler = SequentialSampler(eval_data)
+
       for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
         # in this place the batch contain the input id, input mask, segment id and label id
         batch = tuple(t.to(device) for t in batch)
@@ -350,18 +357,19 @@ def main():
           if args.logging_steps > 0 and global_step % args.logging_steps == 0:
             tr_loss_avg = (tr_loss - logging_loss) / args.logging_steps
             writer.add_scalar("Train/loss", tr_loss_avg, global_step)
+            train_loss_data.append(tr_loss_avg)
+            train_loss_step.append(global_step)
             logging_loss = tr_loss
-            print("training loss",loss)
+            print("training loss", loss)
 
           MAX_EPOCH = int(args.num_train_epochs)
 
           print("Training:Epoch[{:0>3}/{:0>3}] Iteration[{:0>3}/{:0>3}] Loss: {:.4f}".format(
             ep, MAX_EPOCH, step + 1, len(train_dataloader), tr_loss))
 
-
       if args.do_eval:
         all_ori_tokens_eval = [f.ori_tokens for f in eval_features]
-        overall, by_type = evaluate(args, eval_data, model, id2label, all_ori_tokens_eval,writer)
+        overall, by_type = evaluate(args, eval_data, model, id2label, all_ori_tokens_eval, writer)
 
         # add eval result to tensorboard
         f1_score = overall.fscore
@@ -383,6 +391,10 @@ def main():
 
       logger.info(f'epoch {ep}, train loss: {tr_loss}')
     # writer.add_graph(model)
+    logger.info("train_loss_step",train_loss_step)
+    logger.info("train_loss_data", train_loss_data)
+    logger.info("eval_loss_step",eval_loss_step)
+    logger.info("eval_loss_data",eval_loss_data)
     writer.close()
 
     # model_to_save = model.module if hasattr(model, 'module') else model  # Take care of distributed/parallel training
@@ -451,7 +463,6 @@ def main():
           logging_te_loss = test_loss
       print("Test done")
 
-
     assert len(pred_labels) == len(all_ori_tokens) == len(all_ori_labels)
     print("length of predict", len(pred_labels))
     with open(os.path.join(args.output_dir, "token_labels_.txt"), "w", encoding="utf-8") as f:
@@ -463,16 +474,7 @@ def main():
             f.write(f"{ot} {ol} {pl}\n")
         f.write("\n")
 
-  if args.do_eval:
-    if args.do_eval:
-      all_ori_tokens_eval = [f.ori_tokens for f in eval_features]
-      overall, by_type = evaluate(args, eval_data, model, id2label, all_ori_tokens_eval, writer)
 
-      # add eval result to tensorboard
-      f1_score = overall.fscore
-      writer.add_scalar("Eval/precision", overall.prec, 1)
-      writer.add_scalar("Eval/recall", overall.rec, 1)
-      writer.add_scalar("Eval/f1_score", overall.fscore, 1)
 
 if __name__ == "__main__":
   main()

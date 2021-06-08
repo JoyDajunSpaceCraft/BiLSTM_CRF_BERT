@@ -8,7 +8,7 @@ python ner.py \
     --do_train True \
     --do_eval True \
     --do_test True \
-    --max_seq_length 256 \
+    --max_seq_length 512 \
     --train_file ${DATA_DIR}/train.txt \
     --eval_file ${DATA_DIR}/dev.txt \
     --test_file ${DATA_DIR}/test.txt \
@@ -16,8 +16,8 @@ python ner.py \
     --eval_batch_size 32 \
     --num_train_epochs 10 \
     --do_lower_case \
-    --logging_steps 200 \
+    --logging_steps 15 \
     --need_birnn True \
-    --rnn_dim 256 \
+    --rnn_dim 512 \
     --clean True \
     --output_dir $OUTPUT_DIR

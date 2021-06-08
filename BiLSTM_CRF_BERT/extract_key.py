@@ -6,6 +6,8 @@ from sklearn.metrics.pairwise import cosine_similarity as simi
 from nltk.stem import PorterStemmer
 import re
 from nltk.tokenize import sent_tokenize, word_tokenize
+import nltk
+# nltk.download('stopwords')
 # pip3 install git+https://github.com/boudinfl/pke.git
 # pip3 install -U spacy
 # python3 -m spacy download en
@@ -102,7 +104,7 @@ def extract_scispacy(n, model, nlp, text=None):
 
 
 
-# import pke
+import pke
 
 # extracting keywords using topic rank
 def extract_Keys_tr(txt,topn=25):
