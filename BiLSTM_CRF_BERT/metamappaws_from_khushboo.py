@@ -11,8 +11,10 @@ from elasticsearch import Elasticsearch
 # from pyfasttext import FastText
 import fasttext
 
+# 2021 aug 29 current
+mm = MetaMap.get_instance('/ihome/hdaqing/yuj49/zfs/public_mm/bin/metamap20')
 
-mm = MetaMap.get_instance('data/metamap/public_mm/bin/metamap18')
+
 
 def converascii(s):
     n = ud.normalize('NFD', s)

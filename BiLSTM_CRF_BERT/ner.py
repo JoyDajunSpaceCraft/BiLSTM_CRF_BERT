@@ -13,6 +13,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import pickle
+import copy
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
                               TensorDataset)
 from torch.utils.data.distributed import DistributedSampler
@@ -33,10 +34,10 @@ logger = logging.getLogger(__name__)
 valid_curve = []
 checkpoint_interval = 5
 filename = "store iteration"
-train_loss_data = []
-train_loss_step = []
-eval_loss_data = []
-eval_loss_step =[]
+# train_loss_data = []
+# train_loss_step = []
+# eval_loss_data = []
+# eval_loss_step =[]
 
 # set the random seed for repeat
 def set_seed(args):
@@ -105,17 +106,17 @@ def evaluate(args, data, model, id2label, all_ori_tokens, writer):
         steps_list.append(steps)
         print("write into eval")
         writer.add_scalar("Eval/loss", ev_loss_avg, global_step=steps)
-        eval_loss_data.append(ev_loss_avg)
-        eval_loss_step.append(steps)
+        # eval_loss_data.append(ev_loss_avg)
+        # eval_loss_step.append(steps)
         logging_ev_loss = ev_loss
     print("Eval done")
 
-  plt.plot(steps_list, eval_list, label='eval')
-  plt.legend(loc='upper right')
-  plt.ylabel('loss value')
-  plt.xlabel('Iteration')
-  plt.savefig(fname="eval.png")
-  plt.show()
+  # plt.plot(steps_list, eval_list, label='eval')
+  # plt.legend(loc='upper right')
+  # plt.ylabel('loss value')
+  # plt.xlabel('Iteration')
+  # plt.savefig(fname="eval.png")
+  # plt.show()
 
   eval_list = []
   for ori_tokens, oril, prel in zip(all_ori_tokens, ori_labels, pred_labels):
@@ -133,6 +134,7 @@ def evaluate(args, data, model, id2label, all_ori_tokens, writer):
   overall, by_type = conlleval.metrics(counts)
 
   return overall, by_type
+
 
 
 def main():
@@ -295,6 +297,11 @@ def main():
     tr_loss, logging_loss = 0.0, 0.0
     best_f1 = 0.0
 
+    train_plot_data = []
+    test_plot_data = []
+    train_plot_step = []
+    test_plot_step = []
+
     # check dimetion
     print("logging_steps is", args.logging_steps)
     print("gradient_accumulation_steps", args.gradient_accumulation_steps)
@@ -340,6 +347,7 @@ def main():
         outputs = model(input_ids, label_ids, segment_ids, input_mask)
         loss = outputs
 
+
         if n_gpu > 1:
           loss = loss.mean()  # mean() to average on multi-gpu.
         if args.gradient_accumulation_steps > 1:
@@ -356,10 +364,14 @@ def main():
 
           if args.logging_steps > 0 and global_step % args.logging_steps == 0:
             tr_loss_avg = (tr_loss - logging_loss) / args.logging_steps
+            train_plot_data.append(float(tr_loss_avg))
+            train_plot_step.append(global_step)
             writer.add_scalar("Train/loss", tr_loss_avg, global_step)
-            train_loss_data.append(tr_loss_avg)
-            train_loss_step.append(global_step)
+
+            # train_loss_data.append(tr_loss_avg)
+            # train_loss_step.append(global_step)
             logging_loss = tr_loss
+
             print("training loss", loss)
 
           MAX_EPOCH = int(args.num_train_epochs)
@@ -391,18 +403,18 @@ def main():
 
       logger.info(f'epoch {ep}, train loss: {tr_loss}')
     # writer.add_graph(model)
-    logger.info("train_loss_step",train_loss_step)
-    logger.info("train_loss_data", train_loss_data)
-    logger.info("eval_loss_step",eval_loss_step)
-    logger.info("eval_loss_data",eval_loss_data)
+    # logger.info("train_loss_step",train_loss_step)
+    # logger.info("train_loss_data", train_loss_data)
+    # logger.info("eval_loss_step",eval_loss_step)
+    # logger.info("eval_loss_data",eval_loss_data)
     writer.close()
 
-    # model_to_save = model.module if hasattr(model, 'module') else model  # Take care of distributed/parallel training
-    # model_to_save.save_pretrained(args.output_dir)
-    # tokenizer.save_pretrained(args.output_dir)
+    model_to_save = model.module if hasattr(model, 'module') else model  # Take care of distributed/parallel training
+    model_to_save.save_pretrained(args.output_dir)
+    tokenizer.save_pretrained(args.output_dir)
 
     # Good practice: save your training arguments together with the trained model
-    # torch.save(args, os.path.join(args.output_dir, 'training_args.bin'))
+    torch.save(args, os.path.join(args.output_dir, 'training_args.bin'))
 
   if args.do_test:
     # model = BertForTokenClassification.from_pretrained(args.output_dir)
@@ -447,10 +459,21 @@ def main():
       # logits = torch.argmax(F.log_softmax(logits, dim=2), dim=2)
       # logits = logits.detach().cpu().numpy()
 
-      for l in logits:
+      test_feature_copy = copy.deepcopy(test_features)
+
+      result_with_wordpiece = []
+      for i in test_feature_copy:
+        print("test data is", i.tokens)
+        print(type(i.tokens))  # type is list
+        result_with_wordpiece.append(i.tokens)
+
+      for l in zip(logits,result_with_wordpiece):
         pred_label = []
-        for idx in l:
-          pred_label.append(id2label[idx])
+        for index, label_idx in enumerate(l[0]):
+          if "#" in l[1][index]:
+            continue
+          else:
+            pred_label.append(id2label[label_idx])
         pred_labels.append(pred_label)
 
       test_loss += loss
@@ -458,15 +481,33 @@ def main():
         steps += 1
         if args.logging_steps > 0 and steps % args.logging_steps == 0:
           te_loss_avg = (test_loss - logging_te_loss) / args.logging_steps
-          test_list.append(te_loss_avg)
+          test_list.append(float(te_loss_avg))
           step_list.append(steps)
           logging_te_loss = test_loss
+          print("write into eval")
+          writer.add_scalar("Dev/loss", te_loss_avg, global_step=steps)
       print("Test done")
 
     assert len(pred_labels) == len(all_ori_tokens) == len(all_ori_labels)
-    print("length of predict", len(pred_labels))
+
+    temp_all_ori_token = []
+    for ori_token in all_ori_tokens:
+      temp_ori_token = []
+      for i in ori_token:
+        if i in ["[CLS]", "[SEP]"]:
+          continue
+        else:
+          temp_ori_token.append(i)
+
+      temp_all_ori_token.append(temp_ori_token)
+
+    print("ready to print test result")
+    print("pred_label is", len(pred_label))
+    print("all ori token is", temp_all_ori_token)
+    print("all ori labels is", all_ori_labels)
+
     with open(os.path.join(args.output_dir, "token_labels_.txt"), "w", encoding="utf-8") as f:
-      for ori_tokens, ori_labels, prel in zip(all_ori_tokens, all_ori_labels, pred_labels):
+      for ori_tokens, ori_labels, prel in zip(temp_all_ori_token, all_ori_labels, pred_labels):
         for ot, ol, pl in zip(ori_tokens, ori_labels, prel):
           if ot in ["[CLS]", "[SEP]"]:
             continue
@@ -479,3 +520,26 @@ def main():
 if __name__ == "__main__":
   main()
   pass
+# BERT_BASE_DIR=bert-base-uncased
+# DATA_DIR=/content/gdrive/MyDrive/BiLSTM_CRF_BERT/data/6_27_test
+# OUTPUT_DIR=./model/clue_bilstm
+# export CUDA_VISIBLE_DEVICES=0
+
+# python ner.py \
+#     --model_name_or_path ${BERT_BASE_DIR} \
+#     --do_train False \
+#     --do_eval False \
+#     --do_test True \
+#     --max_seq_length 256 \
+#     --train_file ${DATA_DIR}/train.txt \
+#     --eval_file ${DATA_DIR}/dev.txt \
+#     --test_file ${DATA_DIR}/test.txt \
+#     --train_batch_size 32 \
+#     --eval_batch_size 32 \
+#     --num_train_epochs 1 \
+#     --do_lower_case \
+#     --logging_steps 15 \
+#     --need_birnn True \
+#     --rnn_dim 256 \
+#     --clean True \
+#     --output_dir $OUTPUT_DIR

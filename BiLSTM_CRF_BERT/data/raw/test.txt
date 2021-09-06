@@ -1,0 +1,82 @@
+25847295|t|Nonylphenol diethoxylate inhibits apoptosis induced in PC12 cells
+25847295|a|Nonylphenol and short-chain nonylphenol ethoxylates such as NP2 EO are present in aquatic environment as wastewater contaminants, and their toxic effects on aquatic species have been reported. Apoptosis has been shown to be induced by serum deprivation or copper treatment. To understand the toxicity of nonylphenol diethoxylate, we investigated the effects of NP2 EO on apoptosis induced by serum deprivation and copper by using PC12 cell system. Nonylphenol diethoxylate itself showed no toxicity and recovered cell viability from apoptosis. In addition, nonylphenol diethoxylate decreased DNA fragmentation caused by apoptosis in PC12 cells. This phenomenon was confirmed after treating apoptotic PC12 cells with nonylphenol diethoxylate, whereas the cytochrome c release into the cytosol decreased as compared to that in apoptotic cells not treated with nonylphenol diethoxylate s. Furthermore, Bax contents in apoptotic cells were reduced after exposure to nonylphenol diethoxylate. Thus, nonylphenol diethoxylate has the opposite effect on apoptosis in PC12 cells compared to nonylphenol, which enhances apoptosis induced by serum deprivation. The difference in structure of the two compounds is hypothesized to be responsible for this phenomenon. These results indicated that nonylphenol diethoxylate has capability to affect cell differentiation and development and has potentially harmful effect on organisms because of its unexpected impact on apoptosis. © 2015 Wiley Periodicals, Inc. Environ Toxicol 31: 1389-1398, 2016.
+25847295	0	24	Nonylphenol diethoxylate	T131	C1254354
+25847295	25	33	inhibits	T052	C3463820
+25847295	34	43	apoptosis	T043	C0162638
+25847295	44	51	induced	T169	C0205263
+25847295	55	65	PC12 cells	T025	C0085262
+25847295	66	77	Nonylphenol	T131	C1254354
+25847295	82	117	short-chain nonylphenol ethoxylates	T131	C1254354
+25847295	126	132	NP2 EO	T131	C1254354
+25847295	137	144	present	T033	C0150312
+25847295	148	167	aquatic environment	T067	C0563034
+25847295	171	181	wastewater	T069	C3494254
+25847295	182	194	contaminants	T167	C2827365
+25847295	206	219	toxic effects	T037	C0600688
+25847295	223	238	aquatic species	T001	C0596121
+25847295	259	268	Apoptosis	T043	C0162638
+25847295	290	297	induced	T169	C0205263
+25847295	301	306	serum	T031	C0229671
+25847295	307	318	deprivation	T080	C0871712
+25847295	322	328	copper	T121,T123,T196	C0009968
+25847295	329	338	treatment	T169	C1522326
+25847295	358	366	toxicity	T080	C0040539
+25847295	370	394	nonylphenol diethoxylate	T131	C1254354
+25847295	416	426	effects of	T080	C1704420
+25847295	427	433	NP2 EO	T131	C1254354
+25847295	437	446	apoptosis	T043	C0162638
+25847295	447	454	induced	T169	C0205263
+25847295	458	463	serum	T031	C0229671
+25847295	464	475	deprivation	T080	C0871712
+25847295	480	486	copper	T121,T123,T196	C0009968
+25847295	496	512	PC12 cell system	T025	C0085262
+25847295	514	538	Nonylphenol diethoxylate	T131	C1254354
+25847295	579	593	cell viability	T043	C0007620
+25847295	599	608	apoptosis	T043	C0162638
+25847295	623	647	nonylphenol diethoxylate	T131	C1254354
+25847295	648	657	decreased	T081	C0205216
+25847295	658	675	DNA fragmentation	T044	C0376669
+25847295	686	695	apoptosis	T043	C0162638
+25847295	699	709	PC12 cells	T025	C0085262
+25847295	716	726	phenomenon	T067	C1882365
+25847295	747	755	treating	T169	C1522326
+25847295	756	765	apoptotic	T080	C1516044
+25847295	766	776	PC12 cells	T025	C0085262
+25847295	782	806	nonylphenol diethoxylate	T131	C1254354
+25847295	820	832	cytochrome c	T116,T126	C0010749
+25847295	850	857	cytosol	T026	C1383501
+25847295	858	867	decreased	T081	C0205216
+25847295	891	906	apoptotic cells	T025	C0007634
+25847295	911	918	treated	T169	C1522326
+25847295	924	948	nonylphenol diethoxylate	T131	C1254354
+25847295	965	968	Bax	T116,T123	C0219474
+25847295	969	977	contents	T077	C0456205
+25847295	981	996	apoptotic cells	T025	C0007634
+25847295	1002	1009	reduced	T080	C0392756
+25847295	1016	1027	exposure to	T080	C0332157
+25847295	1028	1052	nonylphenol diethoxylate	T131	C1254354
+25847295	1060	1084	nonylphenol diethoxylate	T131	C1254354
+25847295	1093	1108	opposite effect	T080	C1280500
+25847295	1112	1121	apoptosis	T043	C0162638
+25847295	1125	1135	PC12 cells	T025	C0085262
+25847295	1148	1159	nonylphenol	T131	C1254354
+25847295	1167	1175	enhances	T052	C2349975
+25847295	1176	1185	apoptosis	T043	C0162638
+25847295	1186	1193	induced	T169	C0205263
+25847295	1197	1202	serum	T031	C0229671
+25847295	1203	1214	deprivation	T080	C0871712
+25847295	1220	1230	difference	T080	C1705242
+25847295	1234	1243	structure	T082	C0678594
+25847295	1255	1264	compounds	T103	C0220806
+25847295	1268	1280	hypothesized	T078	C1512571
+25847295	1308	1318	phenomenon	T067	C1882365
+25847295	1326	1333	results	T033	C2825142
+25847295	1349	1373	nonylphenol diethoxylate	T131	C1254354
+25847295	1378	1388	capability	T080	C2698977
+25847295	1399	1419	cell differentiation	T043	C0007589
+25847295	1424	1435	development	T039	C0243107
+25847295	1444	1455	potentially	T080	C3245505
+25847295	1456	1470	harmful effect	T037	C0600688
+25847295	1474	1483	organisms	T001	C0029235
+25847295	1510	1516	impact	T080	C4049986
+25847295	1520	1529	apoptosis	T043	C0162638

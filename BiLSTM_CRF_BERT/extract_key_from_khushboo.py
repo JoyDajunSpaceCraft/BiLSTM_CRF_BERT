@@ -46,6 +46,7 @@ def preprocessText(text,stemming=False, lower=False):
     text = re.sub(r'\W+|\d+', ' ', text.strip())
     tokens = word_tokenize(text)
     tokens = [token.strip().lower() for token in tokens ]
+
     if lower:
         text = text.lower()
     if stemming:

@@ -1,14 +1,13 @@
-
 import logging
 import os
-import sys
-import torch
 import pickle
 
+import torch
 from torch.utils.data import TensorDataset
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
+
 
 class InputExample(object):
     """A single training/test example for simple sequence classification."""
@@ -18,16 +17,17 @@ class InputExample(object):
         self.text = text
         self.label = label
 
+
 class InputFeatures(object):
     """A single set of features of data."""
 
-    def __init__(self, input_ids, input_mask, segment_ids, label_id, ori_tokens):
-
+    def __init__(self, input_ids, input_mask, segment_ids, label_id, ori_tokens, tokens):
         self.input_ids = input_ids
         self.input_mask = input_mask
         self.segment_ids = segment_ids
         self.label_id = label_id
         self.ori_tokens = ori_tokens
+        self.tokens = tokens
 
 
 class NerProcessor(object):
@@ -100,8 +100,7 @@ class NerProcessor(object):
 
 
 def convert_examples_to_features(args, examples, label_list, max_seq_length, tokenizer):
-
-    label_map = {label : i for i, label in enumerate(label_list)}
+    label_map = {label: i for i, label in enumerate(label_list)}
 
     features = []
 
@@ -115,7 +114,7 @@ def convert_examples_to_features(args, examples, label_list, max_seq_length, tok
         tokens = []
         labels = []
         ori_tokens = []
-
+        print(len(textlist))
         for i, word in enumerate(textlist):
             # 防止wordPiece情况出现，不过貌似不会
 
@@ -148,6 +147,7 @@ def convert_examples_to_features(args, examples, label_list, max_seq_length, tok
         segment_ids.append(0)
         label_ids.append(label_map["O"])
 
+        print("true token is", tokens)
         for i, token in enumerate(tokens):
             ntokens.append(token)
             segment_ids.append(0)
@@ -160,9 +160,9 @@ def convert_examples_to_features(args, examples, label_list, max_seq_length, tok
 
         input_mask = [1] * len(input_ids)
 
-        assert len(ori_tokens) == len(ntokens), f"{len(ori_tokens)}, {len(ntokens)}, {ori_tokens}"
-        if len(ori_tokens) <len(ntokens):
-          ntokens = ntokens[:len(ori_tokens)]
+        # assert len(ori_tokens) == len(ntokens), f"{len(ori_tokens)}, {len(ntokens)}, {ori_tokens}"
+        if len(ori_tokens) < len(ntokens):
+            ntokens = ntokens[:len(ori_tokens)]
         while len(input_ids) < max_seq_length:
             input_ids.append(0)
             input_mask.append(0)
@@ -191,11 +191,12 @@ def convert_examples_to_features(args, examples, label_list, max_seq_length, tok
         #         pickle.dump(label_map, w)
 
         features.append(
-                InputFeatures(input_ids=input_ids,
-                              input_mask=input_mask,
-                              segment_ids=segment_ids,
-                              label_id=label_ids,
-                              ori_tokens=ori_tokens))
+            InputFeatures(input_ids=input_ids,
+                          input_mask=input_mask,
+                          segment_ids=segment_ids,
+                          label_id=label_ids,
+                          ori_tokens=ori_tokens,
+                          tokens=ntokens))
 
     return features
 
@@ -211,8 +212,8 @@ def get_Dataset(args, processor, tokenizer, mode="train"):
         raise ValueError("mode must be one of train, eval, or test")
 
     examples = processor.get_examples(filepath)
-    label_list = args.label_list
 
+    label_list = args.label_list  # B I O
     features = convert_examples_to_features(
         args, examples, label_list, args.max_seq_length, tokenizer
     )
@@ -225,4 +226,3 @@ def get_Dataset(args, processor, tokenizer, mode="train"):
     data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
 
     return examples, features, data
-
